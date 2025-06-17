@@ -1,0 +1,86 @@
+{% extends "storage/base.html" %}
+{% load static %}
+
+{% block title %}My Files - Distributed File Storage{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">My Files</h1>
+    <div class="flex space-x-4">
+      <a href="{% url 'file_upload' %}" class="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
+        Upload New File
+      </a>
+      
+      {% if is_admin %}
+      <form method="post" onsubmit="return confirm('WARNING: This will permanently delete ALL files in the system! This action cannot be undone. Are you absolutely sure?');">
+        {% csrf_token %}
+        <button type="submit" name="reset_system" value="yes" class="bg-red-500 hover:bg-red-700 text-white font-medium py-2 px-4 rounded flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+          Reset System
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  
+  <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    {% if files %}
+      <table class="min-w-full divide-y divide-gray-200 overflow-x-auto">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Name
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Size
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Uploaded
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Chunks
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          {% for file in files %}
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <a href="{% url 'file_detail' file.id %}">
+                  <div class="text-sm font-medium text-gray-900 underline">{{ file.name }}</div>
+                </a>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-500">{{ file.size|filesizeformat }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-500">{{ file.upload_date|date:"M d, Y H:i" }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-500">{{ file.chunks.count }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <a href="{% url 'download' file.id %}" class="text-indigo-600 hover:text-indigo-900 mr-4">Download</a>
+                <a href="{% url 'file_detail' file.id %}" class="text-blue-600 hover:text-blue-900">Details</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="p-8 text-center">
+        <p class="text-gray-500 mb-4">You haven't uploaded any files yet.</p>
+        <a href="{% url 'file_upload' %}" class="text-blue-500 font-medium hover:text-blue-700">
+          Upload your first file
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

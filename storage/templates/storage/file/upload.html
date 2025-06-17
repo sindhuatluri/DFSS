@@ -1,0 +1,50 @@
+{% extends "storage/base.html" %}
+{% load static %}
+
+{% block title %}Upload File - Distributed File Storage{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-md mx-auto">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Upload File</h1>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      {% if messages %}
+        {% for message in messages %}
+          {% if message.tags == 'error' %}
+             <div class="bg-red-100 text-red-800 p-4 rounded-md mb-4">
+                {{ message }}
+              </div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" action="{% url 'file_upload' %}">
+        {% csrf_token %}
+
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-medium mb-2" for="file">
+            Select File
+          </label>
+          <input
+            class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
+            id="file" name="file" type="file" required>
+          <p class="mt-1 text-xs text-gray-500">Files will be chunked and distributed across nodes</p>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <button
+            class="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            type="submit">
+            Upload
+          </button>
+          <a class="inline-block align-baseline font-medium text-sm text-blue-500 hover:text-blue-800"
+            href="{% url 'file_list_view' %}">
+            View My Files
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

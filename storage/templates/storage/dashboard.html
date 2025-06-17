@@ -1,0 +1,113 @@
+{% extends "storage/base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - Distributed File Storage{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+  <h1 class="text-3xl font-bold text-gray-800 mb-8">Distributed Storage Dashboard</h1>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <!-- System Summary -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold text-gray-700 mb-4">System Summary</h2>
+      <div class="space-y-3">
+        <p class="flex justify-between">
+          <span class="font-medium text-gray-600">Total Files:</span>
+          <span class="text-gray-800">{{ file_count }}</span>
+        </p>
+        <p class="flex justify-between">
+          <span class="font-medium text-gray-600">Total Storage Used:</span>
+          <span class="text-gray-800">{{ total_storage_used|filesizeformat }}</span>
+        </p>
+        <p class="flex justify-between">
+          <span class="font-medium text-gray-600">Online Nodes:</span>
+          <span class="text-gray-800">{{ online_nodes_count }}/{{ total_nodes_count }}</span>
+        </p>
+        <p class="flex justify-between">
+          <span class="font-medium text-gray-600">Total Chunks:</span>
+          <span class="text-gray-800">{{ chunk_count }}</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Recent Files -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold text-gray-700 mb-4">Recent Files</h2>
+      {% if recent_files %}
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead>
+              <tr class="border-b border-gray-200">
+                <th class="text-left py-2 px-3 text-sm font-medium text-gray-500">Name</th>
+                <th class="text-left py-2 px-3 text-sm font-medium text-gray-500">Size</th>
+                <th class="text-left py-2 px-3 text-sm font-medium text-gray-500">Owner</th>
+                <th class="text-left py-2 px-3 text-sm font-medium text-gray-500">Uploaded</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for file in recent_files %}
+              <tr class="border-b border-gray-100">
+                <td class="py-2 px-3 text-sm">{{ file.name }}</td>
+                <td class="py-2 px-3 text-sm">{{ file.size|filesizeformat }}</td>
+                <td class="py-2 px-3 text-sm">{{ file.owner.username }}</td>
+                <td class="py-2 px-3 text-sm">{{ file.upload_date|date:"M d, Y H:i" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-gray-500 italic">No files have been uploaded yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Node Status -->
+  <div class="bg-white p-6 rounded-lg shadow-md">
+    <h2 class="text-xl font-semibold text-gray-700 mb-4">Storage Nodes</h2>
+    {% if nodes %}
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+          <thead>
+            <tr class="border-b border-gray-200">
+              <th class="text-left py-2 px-3 text-sm font-medium text-gray-500">URL</th>
+              <th class="text-left py-2 px-3 text-sm font-medium text-gray-500">Status</th>
+              <th class="text-left py-2 px-3 text-sm font-medium text-gray-500">Load</th>
+              <th class="text-left py-2 px-3 text-sm font-medium text-gray-500">Storage Usage</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for node in nodes %}
+            <tr class="border-b border-gray-100">
+              <td class="py-2 px-3 text-sm">{{ node.url }}</td>
+              <td class="py-2 px-3 text-sm">
+                <span class="px-2 py-1 rounded-full text-xs font-semibold 
+                  {% if node.status == 'online' %}
+                    bg-green-100 text-green-800
+                  {% else %}
+                    bg-red-100 text-red-800
+                  {% endif %}">
+                  {{ node.status|title }}
+                </span>
+              </td>
+              <td class="py-2 px-3 text-sm">{{ node.load }}</td>
+              <td class="py-2 px-3 text-sm">
+                <div class="flex items-center">
+                  <span class="mr-2">{{ node.storage_usage|filesizeformat }}</span>
+                  <div class="w-32 bg-gray-200 rounded-full h-2.5">
+                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ node.storage_percentage }}%"></div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-gray-500 italic">No storage nodes are configured.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

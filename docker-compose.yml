@@ -1,0 +1,104 @@
+version: "3.8"
+
+services:
+  minio1:
+    image: minio/minio:latest
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio1_data:/data
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio2:
+    image: minio/minio:latest
+    restart: always
+    ports:
+      - "9002:9000"
+      - "9003:9001"
+    volumes:
+      - minio2_data:/data
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio3:
+    image: minio/minio:latest
+    restart: always
+    ports:
+      - "9004:9000"
+      - "9005:9001"
+    volumes:
+      - minio3_data:/data
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Service for creating buckets on startup and adding policies
+  createbuckets:
+    image: minio/mc:latest
+    depends_on:
+      - minio1
+      - minio2
+      - minio3
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Waiting for MinIO servers to be ready...';
+      sleep 20;
+
+      echo 'Adding MinIO hosts...';
+      /usr/bin/mc config host add minio1 http://minio1:9000 minioadmin minioadmin;
+      /usr/bin/mc config host add minio2 http://minio2:9000 minioadmin minioadmin;
+      /usr/bin/mc config host add minio3 http://minio3:9000 minioadmin minioadmin;
+
+      echo 'Creating buckets...';
+      /usr/bin/mc mb minio1/distributed-storage --ignore-existing || echo 'Bucket already exists in minio1';
+      /usr/bin/mc mb minio2/distributed-storage --ignore-existing || echo 'Bucket already exists in minio2';
+      /usr/bin/mc mb minio3/distributed-storage --ignore-existing || echo 'Bucket already exists in minio3';
+
+      echo 'Setting public read/write policies...';
+      echo '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"*\"]},\"Action\":[\"s3:GetBucketLocation\",\"s3:ListBucket\",\"s3:ListBucketMultipartUploads\"],\"Resource\":[\"arn:aws:s3:::distributed-storage\"]},{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"*\"]},\"Action\":[\"s3:GetObject\",\"s3:PutObject\",\"s3:DeleteObject\",\"s3:ListMultipartUploadParts\",\"s3:AbortMultipartUpload\"],\"Resource\":[\"arn:aws:s3:::distributed-storage/*\"]}]}' > /tmp/policy.json;
+
+      /usr/bin/mc policy set-json /tmp/policy.json minio1/distributed-storage || echo 'Failed to set policy for minio1';
+      /usr/bin/mc policy set-json /tmp/policy.json minio2/distributed-storage || echo 'Failed to set policy for minio2';
+      /usr/bin/mc policy set-json /tmp/policy.json minio3/distributed-storage || echo 'Failed to set policy for minio3';
+
+      echo 'Buckets and policies configured.';
+      exit 0;
+      "
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+volumes:
+  minio1_data:
+  minio2_data:
+  minio3_data:
+  redis_data:

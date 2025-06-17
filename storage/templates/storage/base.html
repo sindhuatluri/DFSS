@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Distributed File Storage System{% endblock %}</title>
+  <!-- Include Tailwind CSS from CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-100 min-h-screen">
+  {% include "storage/includes/nav.html" %}
+  
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="bg-white py-4 mt-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <p class="text-center text-gray-500 text-sm">
+        &copy; {% now "Y" %} Distributed File Storage System
+      </p>
+    </div>
+  </footer>
+  
+  {% block extra_js %}{% endblock %}
+  <script>
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuBtn = document.querySelector('button[aria-controls="mobile-menu"]');
+      const mobileMenu = document.getElementById('mobile-menu');
+      
+      if (mobileMenuBtn && mobileMenu) {
+        mobileMenuBtn.addEventListener('click', function() {
+          const expanded = this.getAttribute('aria-expanded') === 'true';
+          this.setAttribute('aria-expanded', !expanded);
+          
+          // Toggle mobile menu visibility
+          if (expanded) {
+            mobileMenu.classList.add('hidden');
+          } else {
+            mobileMenu.classList.remove('hidden');
+          }
+          
+          // Toggle button icon
+          const openIcon = this.querySelector('svg.block');
+          const closeIcon = this.querySelector('svg.hidden');
+          
+          if (openIcon && closeIcon) {
+            openIcon.classList.toggle('block');
+            openIcon.classList.toggle('hidden');
+            closeIcon.classList.toggle('block');
+            closeIcon.classList.toggle('hidden');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
